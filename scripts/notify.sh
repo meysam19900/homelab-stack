@@ -17,9 +17,9 @@ TITLE="${2}"
 MESSAGE="${3}"
 PRIORITY="${4:-default}"
 
-NTFY_BASE_URL="${NTFY_BASE_URL:-http://localhost:8080}"
+NTFY_BASE_URL="${NTFY_BASE_URL:-https://ntfy.${DOMAIN:-localhost}}"
 NTFY_TOKEN="${NTFY_TOKEN:-}"
-GOTIFY_URL="${GOTIFY_URL:-http://localhost:8081/message}"
+GOTIFY_URL="${GOTIFY_URL:-https://gotify.${DOMAIN:-localhost}/message}"
 GOTIFY_TOKEN="${GOTIFY_TOKEN:-}"
 
 case "${PRIORITY,,}" in
@@ -37,6 +37,7 @@ case "${PRIORITY,,}" in
     ;;
 esac
 
+# 1. Send via ntfy
 NTFY_ENDPOINT="${NTFY_BASE_URL%/}/${TOPIC}"
 AUTH_HEADER=()
 if [[ -n "${NTFY_TOKEN}" ]]; then
@@ -49,7 +50,8 @@ curl -fsS -X POST "${NTFY_ENDPOINT}" \
   "${AUTH_HEADER[@]}" \
   -d "${MESSAGE}" >/dev/null || echo "[WARN] Failed to deliver alert to ntfy" >&2
 
-if [[ -n "${GOTIFY_URL}" && -n "${GOTIFY_TOKEN}" ]]; then
+# 2. Optional fallback/mirror to Gotify if token is provided
+if [[ -n "${GOTIFY_TOKEN}" ]]; then
   curl -fsS -X POST "${GOTIFY_URL}" \
     -H "X-Gotify-Key: ${GOTIFY_TOKEN}" \
     -F "title=${TITLE} [${TOPIC}]" \

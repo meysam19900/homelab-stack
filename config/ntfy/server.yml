@@ -1,4 +1,4 @@
-﻿base-url: https://ntfy.${DOMAIN}
+base-url: https://ntfy.${DOMAIN}
 auth-default-access: deny-all
 behind-proxy: true
 cache-file: /var/cache/ntfy/cache.db
