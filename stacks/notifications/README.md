@@ -45,7 +45,7 @@ notify:
   - name: ntfy
     platform: rest
     resource: https://ntfy.${DOMAIN}/homelab-ha
-    method: POST_JSON
+    method: POST
 
 ```
 
