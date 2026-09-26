@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ====================================================================
 # Homelab Notification Dispatcher
-# Supports ntfy and Gotify endpoints simultaneously
+# Unified alerting script for ntfy and Gotify
+#====================================================================
 
-TITLE="${1:-System Notification}"
+TITLE="${1:-Homelab Alert}"
 MESSAGE="${2:-No details provided.}"
 PRIORITY="${3:-default}"
 TAGS="${4:-bell}"
