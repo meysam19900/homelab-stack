@@ -50,7 +50,7 @@ curl -fsS -X POST "${NTFY_ENDPOINT}" \
   "${AUTH_HEADER[@]}" \
   -d "${MESSAGE}" >/dev/null || echo "[WARN] Failed to deliver alert to ntfy" >&2
 
-# 2. Optional fallback/mirror to Gotify if token is provided
+# 2. Optional fallback/mirror to Gotify
 if [[ -n "${GOTIFY_TOKEN}" ]]; then
   curl -fsS -X POST "${GOTIFY_URL}" \
     -H "X-Gotify-Key: ${GOTIFY_TOKEN}" \
