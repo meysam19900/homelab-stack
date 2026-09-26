@@ -4,20 +4,24 @@ set -euo pipefail
 # ====================================================================
 # Homelab Notification Dispatcher
 # Unified alerting script for ntfy and Gotify
-#====================================================================
+# Usage: scripts/notify.sh <topic> <title> <message> [priority]
+# ====================================================================
 
-TITLE="${1:-Homelab Alert}"
-MESSAGE="${2:-No details provided.}"
-PRIORITY="${3:-default}"
-TAGS="${4:-bell}"
+if [[ $# -lt 3 ]]; then
+  echo "Usage: $0 <topic> <title> <message> [priority]" >&2
+  exit 1
+fi
 
-# Target URLs and authentication loaded from environment
-NTFY_URL="${NTFY_URL:-http://localhost:8080/homelab-alerts}"
+TOPIC="${1}"
+TITLE="${2}"
+MESSAGE="${3}"
+PRIORITY="${4:-default}"
+
+NTFY_BASE_URL="${NTFY_BASE_URL:-http://localhost:8080}"
 NTFY_TOKEN="${NTFY_TOKEN:-}"
 GOTIFY_URL="${GOTIFY_URL:-http://localhost:8081/message}"
 GOTIFY_TOKEN="${GOTIFY_TOKEN:-}"
 
-# Priority mapping (ntfy / Gotify)
 case "${PRIORITY,,}" in
   min|low|1)
     NTFY_PRIORITY="1"
@@ -33,26 +37,22 @@ case "${PRIORITY,,}" in
     ;;
 esac
 
-# 1. Dispatch to ntfy
-if [[ -n "${NTFY_URL}" ]]; then
-  AUTH_HEADER=()
-  if [[ -n "${NTFY_TOKEN}" ]]; then
-    AUTH_HEADER=(-H "Authorization: Bearer ${NTFY_TOKEN}")
-  fi
-
-  curl -fsS -X POST "${NTFY_URL}" \
-    -H "Title: ${TITLE}" \
-    -H "Priority: ${NTFY_PRIORITY}" \
-    -H "Tags: ${TAGS}" \
-    "${AUTH_HEADER[@]}" \
-    -d "${MESSAGE}" >/dev/null || echo "[WARN] Failed to deliver alert to ntfy" >&2
+NTFY_ENDPOINT="${NTFY_BASE_URL%/}/${TOPIC}"
+AUTH_HEADER=()
+if [[ -n "${NTFY_TOKEN}" ]]; then
+  AUTH_HEADER=(-H "Authorization: Bearer ${NTFY_TOKEN}")
 fi
 
-# 2. Dispatch to Gotify (if app token is configured)
+curl -fsS -X POST "${NTFY_ENDPOINT}" \
+  -H "Title: ${TITLE}" \
+  -H "Priority: ${NTFY_PRIORITY}" \
+  "${AUTH_HEADER[@]}" \
+  -d "${MESSAGE}" >/dev/null || echo "[WARN] Failed to deliver alert to ntfy" >&2
+
 if [[ -n "${GOTIFY_URL}" && -n "${GOTIFY_TOKEN}" ]]; then
   curl -fsS -X POST "${GOTIFY_URL}" \
     -H "X-Gotify-Key: ${GOTIFY_TOKEN}" \
-    -F "title=${TITLE}" \
+    -F "title=${TITLE} [${TOPIC}]" \
     -F "message=${MESSAGE}" \
     -F "priority=${GOTIFY_PRIORITY}" >/dev/null || echo "[WARN] Failed to deliver alert to Gotify" >&2
 fi
